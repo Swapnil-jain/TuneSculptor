@@ -16,3 +16,5 @@ About rabbitMQ:
 1. Synchronous Interservice communication means a client sending a request to a server is essentially blocked from doing anything else until server gives back the response. Eg. Gateway communicates with auth service synchronously. This also makes auth service and gateway tightly coupled.
 2. Asynchronous Interservice communication means client need not await the server response. This is achieved in our case by using a queue (i.e RabbitMQ, Kafka, etc). So, we are using queue cuz the conversion of video may take time and we don't want our gateway to be blocked until then for other requests. This also makes gateway and videotomp3 service loosely coupled. 
 3. Read also about strong consistency vs eventual consistency. We are using eventual consistency route.
+4. RabbitMQ can have multiple queues inside and therefore we have something called an 'exchange' which is an entity which passes our messages to the correct queue.
+5. Have a look at what competing consumers pattern is in rabbitMQ docs.
