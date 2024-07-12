@@ -37,6 +37,22 @@ def login():
     else:
         return("invalid credentials", 401)
 
+@server.route("/validate", methods=["POST"])
+def validate():
+    encoded_jwt=request.headers["Authorization"]
+    if not encoded_jwt:
+        return("missing credentials", 401)
+    encoded_jwt=encoded_jwt.split(" ")[1] #Remember authorization token look like: Authorization: Bearer token  so, we can split it based on the space.
+    try:
+        decoded = jwt.decode(
+            encoded_jwt, os.environ.get("JWT_SECRET"), algorithm=["HS256"]
+        )
+    except:
+        return("Not authorized", 403)
+    
+    return (decoded,200)
+    
+    
 def createJWT(username, secret, authz):
     return jwt.encode(
         {
@@ -48,3 +64,6 @@ def createJWT(username, secret, authz):
         secret,
         algorithm="HS256",
     )
+    
+if __name__ == "__main__": #resolves __name__ variable to __main__  
+    server.run(host="0.0.0.0", port=5000) #host="0.0.0.0" tells the server to listen on all available IP addresses, making it accessible from other machines on the network. In this case, it will listen to all of the docker container's IP addresses.
