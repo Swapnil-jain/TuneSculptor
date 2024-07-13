@@ -20,7 +20,10 @@ fs=gridfs.GridFS(mongo.db) #GridFS is used to store files greater than BSON limi
 1.Establishes a connection to a RabbitMQ message broker.
 2.Creates a channel on the RabbitMQ connection.
 """
-connection= pika.BlockingConnection(pika.ConnectionParameters("rabbitmq"))
+connection= pika.BlockingConnection(pika.ConnectionParameters(
+    host="rabbitmq-service",
+    port=5673,  # Port for HTTP requests to RabbitMQ. 5673 cuz we changed the default one.
+))
 channel = connection.channel()
 
 @server.route("/login", methods=["POST"])
