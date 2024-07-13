@@ -1,14 +1,14 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: gateway
+  name: gateway-deployment #name of deployment itself
   labels:
-    app: gateway
+    app: gateway #label applied to deployment itself. Can be used to select this deployment using Kubernetes selector.
 spec:
   replicas: 2
   selector:
     matchLabels:
-      app: gateway
+      app: gateway-pod  #should match with pod-name as it tells which pods are part of deployment.
   strategy:
     type: RollingUpdate
     rollingUpdate:
@@ -16,13 +16,13 @@ spec:
   template:
     metadata:
       labels:
-        app: gateway
+        app: gateway-pod #This is the pod-name. 
     spec:
       containers:
-        - name: gateway
+        - name: gateway-container  #This is the name of the container within a pod.
           image: swapnilthejain/gateway
           ports:
-            - containerPort: 8080
+            - containerPort: 8080 #tells what port is being exposed by the container. Just for documentation purposes.
           envFrom:
             - configMapRef:
                 name: gateway-configmap

@@ -1,0 +1,35 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: rabbitmq
+spec:
+  selector:
+    matchLabels:
+      app: rabbitmq-pod # has to match .spec.template.metadata.labels
+  template:
+    metadata:
+      labels:
+        app: rabbitmq-pod # has to match .spec.selector.matchLabels
+    spec:
+      containers:
+        - name: rabbitmq-container
+          image: rabbitmq:3-management  #official rabbitmq image with a GUI.
+          ports:
+            - name: http
+              protocol: TCP
+              containerPort: 15672 #port that handles GUI 
+            - name: amqp   #stands for advanced message queuing protocol, used to send queue message.
+              protocol: TCP
+              containerPort: 5672  #port that handles the actual queue.
+          envFrom:
+            - configMapRef:
+                name: rabbitmq-configmap
+            - secretRef:
+                name: rabbitmq-secret
+          volumeMounts:
+            - name: rabbitmq-volume
+              mountPath: "/var/lib/rabbitmq"  #path within container where queue data is stored.
+      volumes:
+        - name: rabbitmq-volume
+          persistentVolumeClaim:
+            claimName: rabbitmq-pvc

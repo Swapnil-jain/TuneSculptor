@@ -10,6 +10,12 @@ About Docker:
 About Kubernetes
 1. It is used to automate the handling/orchestration of the containers. Eg. when to spin up, spin down, what happens when load increases etc.
 2. A Kubernetes object is a "record of intent"--once you create the object, the Kubernetes system will constantly work to ensure that the object exists. By creating an object, you're effectively telling the Kubernetes system what you want your cluster's workload to look like; this is your cluster's desired state. We do this via the yaml file.
+3. Stateful apps are those which don't depend on previous data (state) to function. Eg. Nodejs. They use a 'deployment' component in kubernetes, which creates multiple pods.
+Stateless apps depend on previous data (state) to function. Eg. Databases, queues.
+They use a 'StatefulSet' component in kubernetes. Refer https://www.youtube.com/watch?v=pPQKAR1pA9U&t=52s
+4. What 'services' components are: https://www.youtube.com/watch?v=T4Z7visMM4E. 
+- Since pods are frequently destoyed n created, it doesn't makes sense to use the pod's IP address. Services give our pods a static IP address. Services also do load balancing.
+5. What 'Ingress' component is: https://www.youtube.com/watch?v=80Ew_fsV4rM
 
 
 About rabbitMQ:

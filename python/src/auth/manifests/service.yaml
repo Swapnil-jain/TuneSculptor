@@ -1,12 +1,12 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: auth
+  name: auth-service
 spec:
   selector:
-    app: auth
+    app: auth-pod
   type: ClusterIP
   ports:
-    - port: 5000
-      targetPort: 5000
+    - port: 5001 #listens here
+      targetPort: 5000 #forwards requests here.
       protocol: TCP
