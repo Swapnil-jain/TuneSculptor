@@ -1,0 +1,28 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: converter-deployment
+  labels:
+    app: converter
+spec:
+  replicas: 4
+  selector:
+    matchLabels:
+      app: converter-pod 
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 8
+  template:
+    metadata:
+      labels:
+        app: converter-pod
+    spec:
+      containers:
+        - name: converter-container  #This is the name of the container within a pod.
+          image: swapnilthejain/converter
+          envFrom:
+            - configMapRef:
+                name: converter-configmap
+            - secretRef:
+                name: converter-secret

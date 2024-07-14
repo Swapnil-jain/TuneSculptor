@@ -1,0 +1,36 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mysql-deployment
+spec:
+  selector:
+    matchLabels:
+      db: mysql-pod
+  strategy:
+    type: RollingUpdate
+  template:
+    metadata:
+      labels:
+        db: mysql-pod
+    spec:
+      containers:
+        - name: mysql-container
+          image: mysql:latest
+          envFrom:
+            - secretRef:
+                name: mysql-secret
+          ports:
+            - containerPort: 3306
+              name: mysql
+          volumeMounts:
+            - name: mysql-pv
+              mountPath: /var/lib/mysql # This is the default data directory for MySQL databases within the MySQL container.
+            - name: mysql-init
+              mountPath: /docker-entrypoint-initdb.d/    #This directory is  used by the official MySQL Docker image for initializing a database when the container is first started. Any scripts placed in this directory will be automatically executed in alphabetical order when the container is initialized, before the MySQL server is started.
+      volumes:
+        - name: mysql-pv
+          persistentVolumeClaim:
+            claimName: mysql-pvc
+        - name: mysql-init
+          configMap:
+            name: mysql-initdb
