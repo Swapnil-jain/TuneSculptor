@@ -5,7 +5,7 @@ metadata:
 spec:
   selector:
     db: mysql-pod
-  type: ClusterIP
+  clusterIP: None   #indicates headless service.
   ports:
     - port: 3306
       targetPort: 3306

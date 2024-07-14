@@ -2,9 +2,20 @@ import pika, sys, os, time
 from pymongo import MongoClient
 import gridfs
 from convert import to_mp3
+import logging
+
+# Configure logging settings
+logging.basicConfig(level=logging.INFO)  # Set logging level to INFO (or DEBUG for more details)
 
 def main():
-    client = MongoClient("host.minikube.internal", 27017) #Note that flask is not involved here. So we set mongodb up like this.
+    logging.info("Converter has started..")
+    
+    mongo_user = os.environ.get("MONGO_INITDB_ROOT_USERNAME")
+    mongo_pass = os.environ.get("MONGO_INITDB_ROOT_PASSWORD")
+    mongo_host = os.environ.get("MONGO_HOST")
+    
+    client = MongoClient(
+        f"mongodb://{mongo_user}:{mongo_pass}@{mongo_host}:27017") #Note that flask is not involved here. So we set mongodb up like this.
     db_videos= client.videos  
     db_mp3s= client.mp3s
     
@@ -20,11 +31,14 @@ def main():
     channel = connection.channel()
      
     def callback(ch,method,properties,body):
+        logging.info("I am inside callback function...")
         err=to_mp3.start(body, fs_videos, fs_mp3s, ch)
         if err:
+            logging.info("Mp3 queue push failed.")
             ch.basic_nack(delivery_tag=method.delivery_tag)  #send a negative acknowledgement so message is not removed from the queue.
         else:
-            ch.basic_ack(delivery_tag=method.delivery) 
+            logging.info("Successfully pushed to mp3 queue. ")
+            ch.basic_ack(delivery_tag=method.delivery_tag) 
         
     channel.basic_consume(
         queue=os.environ.get("VIDEO_QUEUE"),
@@ -38,7 +52,7 @@ if __name__ == "__main__":
     try:
         main()
     except KeyboardInterrupt:
-        print("Interrupted")
+        print("Interrupted. Exiting..")
         try:
             sys.exit(0)
         except SystemExit:

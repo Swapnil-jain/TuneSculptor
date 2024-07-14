@@ -1,6 +1,7 @@
-import jwt, datetime, os #for auth
+import jwt, os #for auth
 from flask import Flask, request
 from flask_mysqldb import MySQL
+from datetime import datetime, timezone, timedelta
 
 server= Flask(__name__)
 
@@ -34,11 +35,11 @@ def login():
 def validate():
     encoded_jwt=request.headers["Authorization"]
     if not encoded_jwt:
-        return("Missing credentials", 401)
+        return("Missing token", 401)
     encoded_jwt=encoded_jwt.split(" ")[1] #Remember authorization token look like "Authorization: Bearer" so, we can split it based on the space.
     try:
         decoded = jwt.decode(
-            encoded_jwt, os.environ.get("JWT_SECRET"), algorithm=["HS256"]
+            encoded_jwt, os.environ.get("JWT_SECRET"), algorithms=["HS256"]
         )
     except:
         return("Not authorized", 403)
@@ -46,15 +47,15 @@ def validate():
     return (decoded,200)
     
     
-def createJWT(username, secret, authz):
+def createJWT(username, secret, is_admin):
     return jwt.encode(
         {
             "username": username,
-            "exp": datetime.datetime.utcnow()
- + datetime.timedelta(days=1), #token expires in 24 hours
-            "iat": datetime.datetime.utcnow()
+            "exp": datetime.now(tz=timezone.utc)
+ + timedelta(days=1), #token expires in 24 hours
+            "iat": datetime.now(tz=timezone.utc)
 ,  #when token was issued.
-            "admin": authz, #whether user is admin or not
+            "admin": is_admin, #whether user is admin or not
         },
         secret,
         algorithm="HS256",

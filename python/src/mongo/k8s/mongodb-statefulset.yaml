@@ -1,0 +1,31 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: mongodb-statefulset
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      db: mongodb-pod
+  template:
+    metadata:
+      labels:
+        db: mongodb-pod
+    spec:
+      containers:
+        - name: mongodb-container
+          image: mongo:latest
+          ports:
+            - containerPort: 27017
+          envFrom:
+            - secretRef:
+                name: mongodb-secret
+          volumeMounts:
+            - mountPath: /data/db #path WITHIN container where data will stored. We need to mount an ACTUAL storage to this path.
+              name: mongodb-pv
+      volumes:
+        - name: mongodb-pv
+          persistentVolumeClaim:
+            claimName: mongodb-pvc
+      
+          

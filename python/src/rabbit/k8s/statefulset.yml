@@ -3,6 +3,7 @@ kind: StatefulSet
 metadata:
   name: rabbitmq
 spec:
+  replicas: 1
   selector:
     matchLabels:
       app: rabbitmq-pod # has to match .spec.template.metadata.labels
@@ -28,7 +29,7 @@ spec:
                 name: rabbitmq-secret
           volumeMounts:
             - name: rabbitmq-volume
-              mountPath: "/var/lib/rabbitmq"  #path within container where queue data is stored.
+              mountPath: "/var/lib/rabbitmq"  #path WITHIN container(pod) where data will stored. We need to mount an ACTUAL storage to this path.
       volumes:
         - name: rabbitmq-volume
           persistentVolumeClaim:

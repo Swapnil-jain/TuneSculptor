@@ -1,0 +1,11 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: mongodb-service
+spec:
+  selector:
+    db: mongodb-pod
+  clusterIP: None     #indicates headless service
+  ports:
+    - port: 27017
+      targetPort: 27017
