@@ -1,8 +1,4 @@
 import pika, json
-import traceback
-import logging
-# Configure logging settings
-logging.basicConfig(level=logging.INFO)  # Set logging level to INFO (or DEBUG for more details)
 
 """
 upload function first uploads file to mongo database. If successful, it puts a message in queue. 
@@ -33,5 +29,4 @@ def upload(f, fs, channel, access):
         )
     except:
         fs.delete(fid)  #cuz file which was uploaded now has no purpose.
-        traceback.print_exc()  #used for debugging. remove this line.
         return "internal server error-2", 500

@@ -2,14 +2,8 @@ import pika, sys, os, time
 from pymongo import MongoClient
 import gridfs
 from convert import to_mp3
-import logging
 
-# Configure logging settings
-logging.basicConfig(level=logging.INFO)  # Set logging level to INFO (or DEBUG for more details)
-
-def main():
-    logging.info("Converter has started..")
-    
+def main():    
     mongo_user = os.environ.get("MONGO_INITDB_ROOT_USERNAME")
     mongo_pass = os.environ.get("MONGO_INITDB_ROOT_PASSWORD")
     mongo_host = os.environ.get("MONGO_HOST")
@@ -31,13 +25,10 @@ def main():
     channel = connection.channel()
      
     def callback(ch,method,properties,body):
-        logging.info("I am inside callback function...")
         err=to_mp3.start(body, fs_videos, fs_mp3s, ch)
         if err:
-            logging.info("Mp3 queue push failed.")
             ch.basic_nack(delivery_tag=method.delivery_tag)  #send a negative acknowledgement so message is not removed from the queue.
         else:
-            logging.info("Successfully pushed to mp3 queue. ")
             ch.basic_ack(delivery_tag=method.delivery_tag) 
         
     channel.basic_consume(
