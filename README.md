@@ -7,7 +7,7 @@ Tech Stack Used: Python, Flask, RabbitMQ, Docker, Kubernetes, MongoDB, MySQL.
 
 ![image](https://github.com/user-attachments/assets/8c4ba34d-2fad-41e8-98e0-b9de6d0b8250)
 
-A user is first intended to hit the `gateway` which will redirect user to `/login` which will ask the user for credentials. These credentials will then be stored in an MySQL database. The user will then be return with a JWT token which will be used for authentication in all subsequent requests. The user will then be redirected to the `/upload` where they will be asked for a mp4 file to be uploaded and an email address which will be used to send the converted file's download link. The file uploaded by the user is stored in MongoDB and it's data is pushed to a rabbitMQ queue called `video`. Now, the `converter` service will convert the file to mp3 and push the resulting converted file's data including fileId to `mp3` queue and the file itself is stored in MongoDB. The `notification` service then pulls the messsage from `mp3` queue and sends the user an email containing the link which has the fileId associated. Upon clicking the link, the user is redirected to the `/download` where they can then download the file which is served by the  MongoDB.
+A user is first intended to hit the `gateway` which will redirect user to `/login` which will ask the user for credentials. These credentials will then be stored in an MySQL database. The user will then be returned with a JWT token which will be used for authentication in all subsequent requests. The user will then be redirected to the `/upload` where they will be asked for a mp4 file to be uploaded and an email address which will be used to send the converted file's download link. The file uploaded by the user is stored in MongoDB and it's data is pushed to a rabbitMQ queue called `video`. Now, the `converter` service will retrieve the mp4 file from monogDB using the message, convert the file to mp3, and push the resulting converted file's data to `mp3` queue and the file itself is again stored in MongoDB. The `notification` service then pulls the message from `mp3` queue and sends the user an email containing the link which has the file Id associated. Upon clicking the link, the user is redirected to the `/download` where they can then download the file which is served by the  MongoDB.
 
 ### Introduction
 
@@ -19,8 +19,8 @@ If you directly intend to use the app using existing containers, all you need is
 1. **Docker Desktop**
 2. **kubectl**
 3. **minikube**
-4. **k9s**: optional, used to visualise the k8s cluster better.
-5. **Postman**: to test the application.
+4. **k9s**: optional; used to visualise the k8s cluster better.
+5. **Postman**: optional; to test the application. Otherwise use curl.
 
 If you need to make everything from scratch, in addition to above, you will need:
 1. **Python**: Ideally create a virtual environment.
@@ -33,10 +33,11 @@ Follow these steps to deploy your microservice application:
 1. Ensure Docker desktop is running with minikube on it. 
 2. Run `minikube tunnel`.
 3. Use `sudo vim /etc/hosts` to open up a file which helps map the domain-name we have specified that is mp3converter.com to our localhost. You also need to map rabbitmq-manager.com to your localhost to access the rabbitmq manager UI. So, add these 2 lines in the file:
-```127.0.0.1 mp3converter.com 
+```
+127.0.0.1 mp3converter.com 
 127.0.0.1 rabbitmq-manager.com
 ```
-4. Navigate into each directory, example python/src/auth, and then run `kubectl apply -f ./k8s`
+4. Navigate into each directory, example `cd python/src/auth`, and then run `kubectl apply -f ./k8s`. Do this for all the directories.
 5. Go to `rabbitmq-manager.com` and create 2 queues: `video` and `mp3`.
 6. Use `k9s` command to visualise the k8s cluster.
 
@@ -60,18 +61,18 @@ For configuring email notifications and two-factor authentication (2FA), follow 
 
 8. Paste this generated password in `notification/k8s/notification-secret.yaml` along with your email.
 
-Run the application through the following API calls:
 
 # API Definition
+Run the application through the following API calls:
 
 - **Login Endpoint**
 `POST http://mp3converter.com/login`
 Use Postman for selecting 'Basic Auth' and give username and password, the default being: personalprojectsample@gmail.com and Admin123
 
-Expected output: success! and a JWT token.
+  Expected output: success! and a JWT token.
 
 - **Upload Endpoint**
-`POST http://mp3converter.com/upload` along with headers in format of `Authorization: Bearer <insert JWT Token>` and a file body containing the mp4 file.
+`POST http://mp3converter.com/upload` along with headers in format of `Authorization: Bearer <insert JWT Token>` and a body containing the mp4 file.
 
   Check if you received the ID on your email.
 
