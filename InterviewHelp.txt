@@ -1,3 +1,5 @@
+Some commonly asked questions about these tech stacks in interviews as well as resources on where to study them from.
+
 About Docker:
 1. Every new line is executed sequentially and each line creates a new layer. This helps in caching as if eg. something is changed in line 4, only lines after line 4 are ran again and lines before line 4 are just taken from the cache.
 2. A Docker image is a lightweight, standalone, and executable software package that includes everything needed to run a piece of software, including the code, runtime, libraries, environment variables, and configuration files. Docker image is like a blueprint for the container. 
@@ -6,7 +8,6 @@ About Docker:
 5. Container vs Virtual machine: A virtual machine has a OS on it and it virtualises the hardware via something called 'hypervisor'. A container only virtualises the base OS.
 6. RUN executes commands during the image build process to modify the image itself. CMD specifies the default command to run when a container is launched from the image.
 7. How MongoDB works with kubernetes: https://www.youtube.com/watch?v=LPy6Q-q1MVQ&list=PLrMP04WSdCjrkNYSFvFeiHrfpsSVDFMDR&index=10
-
 
 About Kubernetes
 1. It is used to automate the handling/orchestration of the containers. Eg. when to spin up, spin down, what happens when load increases etc.
