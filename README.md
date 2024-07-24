@@ -1,6 +1,6 @@
 
 # TuneSculptor
-Converting mp4 videos to mp3 format in a microservices architecture. 
+Converting videos (in almost all common formats) to mp3 format in a microservices architecture. 
 Tech Stack Used: Python, Flask, RabbitMQ, Docker, Kubernetes, MongoDB, MySQL.
 
 ## Architecture
