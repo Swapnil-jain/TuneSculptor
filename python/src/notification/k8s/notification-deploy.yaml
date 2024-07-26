@@ -9,6 +9,10 @@ spec:
   selector:
     matchLabels:
       app: notification-pod
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 8
   template:
     metadata:
       labels:
