@@ -27,3 +27,7 @@ They use a 'StatefulSet' component in kubernetes. Refer https://www.youtube.com/
 3. Read also about strong consistency vs eventual consistency. We are using eventual consistency route.
 4. RabbitMQ can have multiple queues inside and therefore we have something called an 'exchange' which is an entity which passes our messages to the correct queue.
 5. Have a look at what competing consumers pattern is in rabbitMQ docs.
+
+### About JWT
+Unlike the cookie+session based method of authentication, we are using JWT authentication. 
+More info: Watch first 3 mins of https://www.youtube.com/watch?v=_3NKBHYcpyg&t=176s

@@ -1,7 +1,4 @@
-import smtplib
-import os
-import json
-
+import smtplib, os, json
 from email.message import EmailMessage
 
 def notify(message):
@@ -15,7 +12,7 @@ def notify(message):
         # Creating message
         msg = EmailMessage()
         msg.set_content(
-            f"Your MP3 file is ready for download.\nMP3 file_id: {mp3_fid}")
+            f"Your MP3 file is ready for download.\nVisit http://mp3converter.com/download?fid={mp3_fid}")
         msg["Subject"] = "MP3 Conversion Complete"
         msg["From"] = sender_address
         msg["To"] = recipient_address

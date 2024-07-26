@@ -1,6 +1,7 @@
 import os, gridfs, pika, json
 from flask import Flask, request, send_file
 from flask_pymongo import PyMongo
+
 #custom modules
 from auth import validate   
 from auth_svc import access
@@ -13,8 +14,6 @@ server= Flask(__name__)
 mongo_user = os.environ.get("MONGO_INITDB_ROOT_USERNAME")
 mongo_pass = os.environ.get("MONGO_INITDB_ROOT_PASSWORD")
 mongo_host = os.environ.get("MONGO_HOST")
-
-#server.config["MONGO_URI"] = "mongodb://host.minikube.internal:27017/videos"
 
 mongo_video = PyMongo(
     server, uri=f"mongodb://{mongo_user}:{mongo_pass}@{mongo_host}:27017/videos?authSource=admin"
@@ -30,13 +29,13 @@ fs_mp3s = gridfs.GridFS(mongo_mp3.db)
 1.Establishes a connection to a RabbitMQ message broker.
 2.Creates a channel on the RabbitMQ connection.
 """
-def establish_rabbitmq_connection():
-    connection = pika.BlockingConnection(pika.ConnectionParameters(
-        host="rabbitmq-service",
-        port=5673,  # Port for HTTP requests to RabbitMQ. 5673 because we changed the default one.
-    ))
-    return connection
-
+connection = pika.BlockingConnection(pika.ConnectionParameters(
+    host="rabbitmq-service",
+    port=5673,  # 5673 because we changed the default.
+))
+channel = connection.channel() 
+channel.queue_declare(queue='video')  #makes our queue if they don't already exist.
+channel.queue_declare(queue='mp3')
 
 @server.route("/login", methods=["POST"])
 def login():
@@ -55,17 +54,13 @@ def upload():
     if access["admin"] == True: #user has admin rights as only admins can upload files for now.
         if len(request.files) > 1 or len(request.files) < 1:  #ensures user has uploaded exactly one file.
             return ("Exactly one file required", 400)
-        try:
-            connection = establish_rabbitmq_connection()
-            channel = connection.channel() 
-            for _,f in request.files.items():
-                err=util.upload(f, fs_videos, channel, access)
-                if err:
-                    return err
-            return ("Successfully uploaded file.", 200)
-    
-        finally:
-            connection.close()
+        
+        for _,f in request.files.items():
+            err=util.upload(f, fs_videos, channel, access)
+            if err:
+                return err
+        return ("Successfully uploaded file.", 200)
+
     else:
         return ("Not authorized",401)
 

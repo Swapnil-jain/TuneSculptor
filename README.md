@@ -21,6 +21,7 @@ If you directly intend to use the app using existing containers, all you need is
 3. **minikube**
 4. **k9s**: optional; used to visualise the k8s cluster better.
 5. **Postman**: optional; to test the application. Otherwise use curl.
+6. **mongodb compass*: optional; to visualise the database better.
 
 If you need to make everything from scratch, in addition to above, you will need:
 1. **Python**: Ideally create a virtual environment.
@@ -38,8 +39,8 @@ Follow these steps to deploy your microservice application:
 127.0.0.1 rabbitmq-manager.com
 ```
 4. Navigate into each directory, example `cd python/src/auth`, and then run `kubectl apply -f ./k8s`. Do this for all the directories.
-5. Go to `rabbitmq-manager.com` and create 2 queues: `video` and `mp3`.
-6. Use `k9s` command to visualise the k8s cluster.
+5. Use `k9s` command to visualise the k8s cluster.
+6. If you are using MongoDB compass, run `kubectl port-forward <mongodb-pod-name> 27017:27017` to connect to MongoDB instance running on the k8s cluster using port forwarding. Also remember to use default credentials specified in `mongodb-secret.yaml`. The URI for connection should look like `mongodb://root:password123@localhost:27017/`.
 
 ### Notification Configuration
 
