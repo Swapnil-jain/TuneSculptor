@@ -1,6 +1,7 @@
 import pika, json, tempfile, os
 from bson.objectid import ObjectId
 import moviepy.editor
+from datetime import datetime, timezone
 
 def start(message, fs_videos, fs_mp3s, channel):
     message = json.loads(message) #converts json to python object.
@@ -27,7 +28,7 @@ def start(message, fs_videos, fs_mp3s, channel):
     #save file to mongo
     with open(tf_path, "rb") as f:
         data = f.read()
-        fid = fs_mp3s.put(data)
+        fid = fs_mp3s.put(data, created_at=datetime.now(timezone.utc))
         
     os.remove(tf_path)
     

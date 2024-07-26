@@ -1,6 +1,8 @@
 import os, gridfs, pika, json
 from flask import Flask, request, send_file
 from flask_pymongo import PyMongo
+from datetime import datetime, timedelta, timezone
+from apscheduler.schedulers.background import BackgroundScheduler
 
 #custom modules
 from auth import validate   
@@ -34,8 +36,28 @@ connection = pika.BlockingConnection(pika.ConnectionParameters(
     port=5673,  # 5673 because we changed the default.
 ))
 channel = connection.channel() 
-channel.queue_declare(queue='video')  #makes our queue if they don't already exist.
-channel.queue_declare(queue='mp3')
+channel.queue_declare(queue=os.environ.get("VIDEO_QUEUE"))  #makes our queue if they don't already exist.
+channel.queue_declare(queue=os.environ.get("MP3_QUEUE"))
+
+scheduler = BackgroundScheduler()
+
+
+#deleting old videos and mp3 files (>24 hours) from mongoDB.
+def delete_old_files():
+    now = datetime.now(timezone.utc)
+    cutoff = now - timedelta(days=1)
+
+    old_videos = mongo_video.db.fs.files.find({"created_at": {"$lt": cutoff}})
+    for video in old_videos:
+        fs_videos.delete(video["_id"])
+
+    old_mp3s = mongo_mp3.db.fs.files.find({"created_at": {"$lt": cutoff}})
+    for mp3 in old_mp3s:
+        fs_mp3s.delete(mp3["_id"])
+
+scheduler.add_job(delete_old_files, 'interval', hours=24) #runs every 24 hours.
+scheduler.start()
+
 
 @server.route("/login", methods=["POST"])
 def login():
