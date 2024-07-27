@@ -16,7 +16,7 @@ mysql=MySQL(server) #instance of MySQL
 
 @server.route("/login", methods=["POST"])
 def login():
-    auth=request.authorization  #auth should have authenticated header.
+    auth=request.authorization  #auth should have authorization header.
     if not auth:
         return("Missing credentials", 401) #in case doesnt have authorization header
     
@@ -33,10 +33,10 @@ def login():
 
 @server.route("/validate", methods=["POST"])
 def validate():
-    encoded_jwt=request.headers["Authorization"]
+    encoded_jwt=request.cookies["jwt_token"]
     if not encoded_jwt:
         return("Missing token", 401)
-    encoded_jwt=encoded_jwt.split(" ")[1] #Remember authorization token look like "Authorization: Bearer" so, we can split it based on the space.
+    #encoded_jwt=encoded_jwt.split(" ")[1] #Remember authorization token look like "Authorization: Bearer" so, we can split it based on the space.
     try:
         decoded = jwt.decode(
             encoded_jwt, os.environ.get("JWT_SECRET"), algorithms=["HS256"]

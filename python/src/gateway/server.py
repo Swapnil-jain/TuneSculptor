@@ -1,8 +1,9 @@
 import os, gridfs, pika, json
-from flask import Flask, request, send_file
+from flask import Flask, request, send_file, jsonify, make_response
 from flask_pymongo import PyMongo
 from datetime import datetime, timedelta, timezone
 from apscheduler.schedulers.background import BackgroundScheduler
+import mimetypes
 
 #custom modules
 from auth import validate   
@@ -63,48 +64,59 @@ scheduler.start()
 def login():
     token, err= access.login(request)
     if not err:
-        return token
+        response = make_response(jsonify({"message": "Login successful"}))
+        response.set_cookie('jwt_token', token, httponly=True, secure=False ,samesite='Lax', max_age=86400)  #Set cookie with token. secure=True when deploying to prod since it will use https.
+        return response
     else:
-        return err
+        return jsonify(error=err), 401
 
 @server.route("/upload", methods=["POST"])
 def upload():
     access, err= validate.token(request)  #ensure user authentication before upload.
     if err:
-        return err
+        return jsonify(error=err), 401
     access=json.loads(access) #converting JSON string to python object
     if access["admin"] == True: #user has admin rights as only admins can upload files for now.
         if len(request.files) > 1 or len(request.files) < 1:  #ensures user has uploaded exactly one file.
-            return ("Exactly one file required", 400)
-        
+            return jsonify(error="Exactly one file required"), 400
         for _,f in request.files.items():
+             # Check if the file is a video file
+            mime_type, _ = mimetypes.guess_type(f.filename)
+            if not mime_type or not mime_type.startswith('video'):
+                return jsonify(error="Invalid file type. Only video files are allowed."), 400
+            
+             # Further extension check (optional but recommended)
+            allowed_extensions ={"mp4", "avi", "mov", "wmv", "flv", "mkv", "gif", "ogg", "webm"}
+            if not any(f.filename.lower().endswith(ext) for ext in allowed_extensions):
+                return jsonify(error="Invalid file extension. Allowed extensions are: mp4, avi, mov, mkv."), 400
+        
             err=util.upload(f, fs_videos, channel, access)
             if err:
-                return err
-        return ("Successfully uploaded file.", 200)
+                return jsonify(error=err), 500
+        return jsonify(message="Successfully uploaded file."), 200
 
     else:
-        return ("Not authorized",401)
+        return jsonify(error="Not authorized"), 401
 
 @server.route("/download", methods=["GET"])
 def download():
     access, err= validate.token(request)  #ensure user authentication before upload.
     if err:
-        return err
+        return jsonify(error=err), 401
     access=json.loads(access) #converting JSON string to python object
     
     if access["admin"] == True: #user has admin rights as only admins can upload files for now.
         fid_string = request.args.get("fid")
         if not fid_string:
-            return "file id (fid) is required", 400
+            return jsonify(error="file id (fid) is required"), 400
         try:
             out = fs_mp3s.get(ObjectId(fid_string)) #convert fid_string to mongo Object.
             return send_file(out, download_name=f"{fid_string}.mp3")
         except Exception as err:
             print(err)
-            return "internal server error", 500
+            return jsonify(error="internal server error"), 500
     else: 
-        return "Not authorized", 401
+        return jsonify(error="Not authorized"), 401    
 
 if __name__ == "__main__":
     server.run(host='0.0.0.0', port=8080)
