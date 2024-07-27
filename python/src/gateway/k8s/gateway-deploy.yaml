@@ -5,7 +5,7 @@ metadata:
   labels:
     app: gateway #label applied to deployment itself. Can be used to select this deployment using Kubernetes selector.
 spec:
-  replicas: 2
+  replicas: 1
   selector:
     matchLabels:
       app: gateway-pod  #should match with pod-name as it tells which pods are part of deployment.

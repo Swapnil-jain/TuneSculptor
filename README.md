@@ -62,6 +62,14 @@ For configuring email notifications and two-factor authentication (2FA), follow 
 
 8. Paste this generated password in `notification/k8s/notification-secret.yaml` along with your email.
 
+### Mongo Configuration
+We need to setup mechanism to automatically delete the videos and mp3s in our database. For this:
+1. Run `kubectl exec -it <name of pod> -- /bin/bash` to open up the pod.
+2. Run `mongosh --username <username> --password <password> --authenticationDatabase admin` inside the pod.
+3. Now run `show dbs` and go inside videos and mp3s using `use videos` and `use mp3s`.
+4. Run `db.fs.files.createIndex({ "created_at": 1 }, { expireAfterSeconds: 120 })` where 86400 is number of seconds after which the file is automatically deleted.
+
+**Note:** If you change anything within a pod and start getting Internal server errors, the first thing to do is run `kubectl delete pods --all -A`. This will simply restart all the pods, and might very often fix the problem.
 
 # API Definition
 Run the application through the following API calls:

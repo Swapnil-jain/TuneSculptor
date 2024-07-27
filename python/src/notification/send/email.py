@@ -12,7 +12,7 @@ def notify(message):
         # Creating message
         msg = EmailMessage()
         msg.set_content(
-            f"Your MP3 file is ready for download.\nVisit http://mp3converter.com/download?fid={mp3_fid}")
+            f"Your MP3 file is ready for download.\nPlease visit: http://mp3converter.com/download?fid={mp3_fid} \nPlease note this link is valid only for 24 hours.")
         msg["Subject"] = "MP3 Conversion Complete"
         msg["From"] = sender_address
         msg["To"] = recipient_address

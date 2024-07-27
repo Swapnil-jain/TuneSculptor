@@ -31,3 +31,7 @@ They use a 'StatefulSet' component in kubernetes. Refer https://www.youtube.com/
 ### About JWT
 Unlike the cookie+session based method of authentication, we are using JWT authentication. 
 More info: Watch first 3 mins of https://www.youtube.com/watch?v=_3NKBHYcpyg&t=176s
+
+# Some Challenges Faced
+1. Handling JWT was challenging. Here is my current flow: User logs in, gets back a jwt token. The frontend js will save it to localstroage by name of 'token'. When uploading a file, a js function will fetch the 'token' from localstorage and then send it as a header along with the file. So far so good. The problem is when the link to download is being sent, and when I click on that, I was getting missing credentials. The reason was, since this request directly goes to the backend, there was no intermediary in between to include the Authorization header.
+The solution suggested was to store the JWT as a cookie instead of local storage. This would eliminate the need to manually set the header everytime. This solution worked.
