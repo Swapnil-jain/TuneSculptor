@@ -39,3 +39,11 @@ spec:
                 name: gateway-service
                 port:
                   number: 8081
+          - path: /validate_token
+            pathType: Prefix
+            backend:
+              service:
+                name: gateway-service
+                port:
+                  number: 8081
+          

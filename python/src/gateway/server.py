@@ -118,5 +118,13 @@ def download():
     else: 
         return jsonify(error="Not authorized"), 401    
 
+@server.route("/validate_token", methods=["GET"])
+def validate_token():
+    #add some sort of security check here to avoid user from spamming post requests here.
+    access, err = validate.token(request)
+    if err:
+        return jsonify(valid=False), 401
+    return jsonify(valid=True), 200
+
 if __name__ == "__main__":
     server.run(host='0.0.0.0', port=8080)
