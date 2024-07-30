@@ -19,7 +19,7 @@ def main():
     
     #rabbitmq
     connection= pika.BlockingConnection(pika.ConnectionParameters(
-        host="rabbitmq-service",
+        host="rabbitmq-service.rabbits.svc.cluster.local",
         port=5673,  
     ))
     channel = connection.channel()

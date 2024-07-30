@@ -2,13 +2,14 @@ apiVersion: v1
 kind: Service
 metadata:
   name: rabbitmq-service
+  namespace: rabbits
 spec:
   selector:
     app: rabbitmq-pod #used to select what pod-names to forward requests to.
-  type: ClusterIP
+  type: LoadBalancer 
   ports:
     - name: http
-      port: 15673 #receives here
+      port: 15672 #receives here
       targetPort: 15672 #forwards requests to this port.
       protocol: TCP
     - name: amqp

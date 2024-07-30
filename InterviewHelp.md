@@ -35,3 +35,16 @@ More info: Watch first 3 mins of https://www.youtube.com/watch?v=_3NKBHYcpyg&t=1
 # Some Challenges Faced
 1. Handling JWT was challenging. Here is my current flow: User logs in, gets back a jwt token. The frontend js will save it to localstroage by name of 'token'. When uploading a file, a js function will fetch the 'token' from localstorage and then send it as a header along with the file. So far so good. The problem is when the link to download is being sent, and when I click on that, I was getting missing credentials. The reason was, since this request directly goes to the backend, there was no intermediary in between to include the Authorization header.
 The solution suggested was to store the JWT as a cookie instead of local storage. This would eliminate the need to manually set the header everytime. This solution worked. The problem with this solution was that cookie have an attribute called 'httpOnly' which mean the cookies can be accessed by servers only and not by the frontend. This is a problem cuz my frontend is a separate microservice. To solve this, I had to add a new route to my backend called 'validate_token', which I use to confirm if the token is valid in the backend.
+
+2. RabbitMQ clustering is a lot more complicated than what I thought. You can't just increase the number of replicas to more than one and hope everything works. I referred to these resources:
+https://www.rabbitmq.com/docs/cluster-formation (very confusing and intimidating)
+https://www.rabbitmq.com/docs/clustering (very confusing and intimidating)
+https://www.rabbitmq.com/blog/2020/08/10/deploying-rabbitmq-to-kubernetes-whats-involved (extremely helpful)
+https://youtu.be/FzqjtU2x6YA?si=0_Rjam_xCGT4tPmE (extremely helpful)
+https://youtu.be/_lpDfMkxccc?si=Lhet7sVd1cY8hfmv (extremely helpful)
+Things I learnt:
+a. 'Erlang cookie' is something which is used by rabbitmq pods for authentication before adding the pods to the cluster. We need to make sure each pod has the same erlang cookie. 
+b. Whenever joining a cluster, each pod loses it data and needs to be reset.
+c. Joining a cluster, pods simply share the necessary information in order to communicate with each other. They do not share queues by default. So, if I have 3 pods: a,b and c as part of a cluster, and a message is pushed into 'a', but somehow a dies, that message is simply lost. This is where 'mirroring' queues concept is introduced. Basically, simply making a 'quorum' (as opposed to classic) queue solves this problem.
+d. We need to have rbac.yml file used to used to create service accounts, roles, and role bindings to manage permissions for RabbitMQ within the Kubernetes cluster.
+e. Some other config needs to be done in the statefulset file and configmap file.

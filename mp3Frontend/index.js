@@ -28,7 +28,7 @@ document.addEventListener("DOMContentLoaded", async () => {
       });
 
       if (response.ok) {
-        alert("File uploaded successfully");
+        window.location.href = "http://mp3converter.com/thankyou.html";
       } else {
         const errorData = await response.json();
         console.log("Error message:", errorData.error);
