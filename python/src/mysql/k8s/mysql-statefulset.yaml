@@ -3,6 +3,7 @@ kind: StatefulSet
 metadata:
   name: mysql-statefulset
 spec:
+  replicas: 1
   selector:
     matchLabels:
       db: mysql-pod
@@ -25,6 +26,13 @@ spec:
               mountPath: /var/lib/mysql # #path WITHIN container where data will stored. We need to mount an ACTUAL storage to this path.
             - name: mysql-init
               mountPath: /docker-entrypoint-initdb.d/    #This directory is  used by the official MySQL Docker image for initializing a database when the container is first started. Any scripts placed in this directory will be automatically executed in alphabetical order when the container is initialized, before the MySQL server is started.
+          resources:
+            requests:
+              memory: "256Mi"
+              cpu: "250m"
+            limits:
+              memory: "512Mi"
+              cpu: "500m"
       volumes:
         - name: mysql-pv
           persistentVolumeClaim:

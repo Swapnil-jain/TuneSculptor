@@ -5,7 +5,7 @@ metadata:
   namespace: rabbits
 spec:
   serviceName: rabbitmq
-  replicas: 3
+  replicas: 2
   selector:
     matchLabels:
       app: rabbitmq-pod
@@ -68,6 +68,13 @@ spec:
               mountPath: /config/
             - name: plugins-file
               mountPath: /etc/rabbitmq/
+          resources:
+            requests:
+              memory: "128Mi"
+              cpu: "100m"
+            limits:
+              memory: "256Mi"
+              cpu: "200m"
       volumes:
         - name: config-file
           emptyDir: {}
@@ -77,6 +84,12 @@ spec:
           configMap:
             name: rabbitmq-config
             defaultMode: 0755
-        - name: rabbitmq-volume
-          persistentVolumeClaim:
-            claimName: rabbitmq-pvc
+  volumeClaimTemplates:   #dynamic provisioning
+    - metadata:
+        name: rabbitmq-volume
+      spec:
+        accessModes: [ "ReadWriteOnce" ]
+        storageClassName: standard   #this name might change in prod env.
+        resources:
+          requests:
+            storage: 50Mi
