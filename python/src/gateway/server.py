@@ -34,8 +34,9 @@ fs_mp3s = gridfs.GridFS(mongo_mp3.db)
 2.Creates a channel on the RabbitMQ connection.
 """
 connection = pika.BlockingConnection(pika.ConnectionParameters(
-    host="rabbitmq-service.rabbits.svc.cluster.local",
-    port=5673,  # 5673 because we changed the default.
+    host=os.environ.get("RABBIT_HOST"),
+    port=5672,
+    heartbeat=60,
 ))
 channel = connection.channel(); 
 channel.queue_declare(queue=os.environ.get("VIDEO_QUEUE"), durable=True, arguments={'x-queue-type':'quorum'})  #makes our queue if they don't already exist.

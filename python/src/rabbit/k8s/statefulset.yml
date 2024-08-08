@@ -2,7 +2,6 @@ apiVersion: apps/v1
 kind: StatefulSet
 metadata:
   name: rabbitmq-statefulset
-  namespace: rabbits
 spec:
   serviceName: rabbitmq
   replicas: 2
@@ -70,11 +69,11 @@ spec:
               mountPath: /etc/rabbitmq/
           resources:
             requests:
-              memory: "128Mi"
-              cpu: "100m"
-            limits:
               memory: "256Mi"
-              cpu: "200m"
+              cpu: "250m"
+            limits:
+              memory: "512Mi"
+              cpu: "500m"
       volumes:
         - name: config-file
           emptyDir: {}
@@ -92,4 +91,4 @@ spec:
         storageClassName: standard   #this name might change in prod env.
         resources:
           requests:
-            storage: 50Mi
+            storage: 100Mi

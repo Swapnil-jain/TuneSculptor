@@ -1,4 +1,0 @@
-apiVersion: v1
-kind: Namespace
-metadata:
-  name: rabbits  #used to create a namespace called rabbits.
