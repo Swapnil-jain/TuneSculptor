@@ -109,6 +109,9 @@ Both of these commands are basically the same. Note the 2nd command is technical
 2. In MongoDB, each database has its own user roles and you can create user for a specific database. In our case, we choose the 'admin' database to create our user. We need to then specify this admin database everytime we connect to mongo for authentication, however since this is the default authentication database, it can be skipped.
 3. If you need to connect from outside the cluster to the database, example using mongo compass, you may use `mongodb://<username>:<password>@127.0.0.1:27017/?directConnection=true&authSource=admin` to connect.
 
+### MySQL Configuration
+MySQL is already configured if you have a look in mysql-cm.yaml. To access the database, you need to run `kubectl exec --namespace <namespace> -it <name of pod> -- /bin/bash` followed by `mysql -u <username> -p` and then enter password. Note that the default username is `root` and password we have setup is `Auth123`. The database we are using is `auth`.
+
 ## API Definition
 Run the application through the following API calls:
 

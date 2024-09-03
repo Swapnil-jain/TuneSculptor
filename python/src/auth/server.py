@@ -1,4 +1,4 @@
-import jwt, os #for auth
+import jwt, os, bcrypt #for auth
 from flask import Flask, request
 from flask_mysqldb import MySQL
 from datetime import datetime, timezone, timedelta
@@ -22,12 +22,15 @@ def login():
     
     #check db for username and password
     cur = mysql.connection.cursor()
-    res = cur.execute("SELECT email, password FROM user WHERE email = %s AND password = %s", (
-        auth.username, auth.password, )
-    )
-    
-    if res > 0: #means result exists in database
-        return createJWT(auth.username, os.environ.get("JWT_SECRET"), True)
+    res = cur.execute("SELECT password FROM user WHERE email = %s", (auth.username,))
+
+    if res > 0:
+        stored_hashed_password = cur.fetchone()[0]  # Get the hashed password from the result
+        # Compare hashed password with the provided password
+        if bcrypt.checkpw(auth.password.encode('utf-8'), stored_hashed_password.encode('utf-8')):
+            return createJWT(auth.username, os.environ.get("JWT_SECRET"), True)
+        else:
+            return("Invalid credentials", 401)
     else:
         return("Invalid credentials", 401)
     
@@ -37,18 +40,21 @@ def register():
     if not auth:
         return ("Missing credentials", 401) #in case doesnt have authorization header
     
-    #check db for username and password
+    #check db for existing email
     cur = mysql.connection.cursor()
-    res = cur.execute("SELECT email, password FROM user WHERE email = %s AND password = %s", (
-        auth.username, auth.password, )
+    res = cur.execute("SELECT email FROM user WHERE email = %s", (
+        auth.username, )
     )
 
     if res > 0: #means result already exists in database
         return ("User already registered", 409)
     else:
+        # Hash the password before storing it
+        hashed_password = bcrypt.hashpw(auth.password.encode('utf-8'), bcrypt.gensalt())
+        
         cur.execute(
             "INSERT INTO user (email, password) VALUES (%s, %s)", 
-            (auth.username, auth.password)
+            (auth.username, hashed_password.decode('utf-8'))
         )
         mysql.connection.commit()  # Commit the transaction after inserting the data
         return ("User registered successfully", 201)  
