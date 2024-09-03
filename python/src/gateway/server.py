@@ -71,6 +71,11 @@ def login():
         return response
     else:
         return jsonify(error=err), 401
+    
+@server.route("/register", methods=["POST"])
+def register():
+    response = access.register(request)
+    return make_response(jsonify(message=response.text), response.status_code)
 
 @server.route("/upload", methods=["POST"])
 def upload():

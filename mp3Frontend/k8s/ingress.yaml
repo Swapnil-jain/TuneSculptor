@@ -25,6 +25,13 @@ spec:
                 name: gateway-service
                 port:
                   number: 8081
+          - path: /register
+            pathType: Prefix
+            backend:
+              service:
+                name: gateway-service
+                port:
+                  number: 8081
           - path: /upload
             pathType: Prefix
             backend:

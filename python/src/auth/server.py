@@ -30,6 +30,28 @@ def login():
         return createJWT(auth.username, os.environ.get("JWT_SECRET"), True)
     else:
         return("Invalid credentials", 401)
+    
+@server.route("/register", methods=["POST"])
+def register():
+    auth=request.authorization  #auth should have authorization header.
+    if not auth:
+        return ("Missing credentials", 401) #in case doesnt have authorization header
+    
+    #check db for username and password
+    cur = mysql.connection.cursor()
+    res = cur.execute("SELECT email, password FROM user WHERE email = %s AND password = %s", (
+        auth.username, auth.password, )
+    )
+
+    if res > 0: #means result already exists in database
+        return ("User already registered", 409)
+    else:
+        cur.execute(
+            "INSERT INTO user (email, password) VALUES (%s, %s)", 
+            (auth.username, auth.password)
+        )
+        mysql.connection.commit()  # Commit the transaction after inserting the data
+        return ("User registered successfully", 201)  
 
 @server.route("/validate", methods=["POST"])
 def validate():

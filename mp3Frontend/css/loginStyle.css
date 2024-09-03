@@ -190,9 +190,29 @@ a.google span {
     color: #232836;
 }
 
+/* login message styles */
+.login-message {
+    color: red;
+    font-size: 14px;
+    text-align: center;
+    margin-top: 10px;
+    margin-bottom: 10px;
+    display: hidden; /* Initially hidden */
+}
+
+/* login message styles */
+.register-message {
+    color: red;
+    font-size: 14px;
+    text-align: center;
+    margin-top: 10px;
+    margin-bottom: 10px;
+    display: hidden;
+    /* Initially hidden */
+}
+
 @media screen and (max-width: 400px) {
     .form {
         padding: 20px 10px;
     }
-
 }
