@@ -16,8 +16,9 @@ document.addEventListener("DOMContentLoaded", async () => {
   if (loginForm) {
     loginForm.addEventListener("submit", async (e) => {
       e.preventDefault();
-      const username = document.getElementById("username").value;
+      const username = document.getElementById("email").value;
       const password = document.getElementById("password").value;
+      console.log(username, password); // This should print the input elements to the console
 
       const response = await fetch("http://mp3converter.com/login", {
         method: "POST",
@@ -36,5 +37,5 @@ document.addEventListener("DOMContentLoaded", async () => {
         alert("Login failed");
       }
     });
-  }
+  } 
 });
