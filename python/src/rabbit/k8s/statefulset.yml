@@ -1,36 +1,94 @@
 apiVersion: apps/v1
 kind: StatefulSet
 metadata:
-  name: rabbitmq
+  name: rabbitmq-statefulset
 spec:
-  replicas: 1
+  serviceName: rabbitmq
+  replicas: 2
   selector:
     matchLabels:
-      app: rabbitmq-pod # has to match .spec.template.metadata.labels
+      app: rabbitmq-pod
   template:
     metadata:
       labels:
-        app: rabbitmq-pod # has to match .spec.selector.matchLabels
+        app: rabbitmq-pod
     spec:
+      serviceAccountName: rabbitmq-rbac
+      initContainers:
+        - name: config
+          image: busybox
+          command: ['/bin/sh', '-c', 'cp /tmp/config/rabbitmq.conf /config/rabbitmq.conf && ls -l /config/ && cp /tmp/config/enabled_plugins /etc/rabbitmq/enabled_plugins']
+          volumeMounts:
+            - name: config
+              mountPath: /tmp/config/
+              readOnly: false
+            - name: config-file
+              mountPath: /config/
+            - name: plugins-file
+              mountPath: /etc/rabbitmq/
       containers:
         - name: rabbitmq-container
-          image: rabbitmq:3-management  #official rabbitmq image with a GUI.
+          image: rabbitmq:3.8-management
           ports:
-            - name: http
-              protocol: TCP
-              containerPort: 15672 #port that handles GUI 
-            - name: amqp   #stands for advanced message queuing protocol, used to send queue message.
-              protocol: TCP
-              containerPort: 5672  #port that handles the actual queue.
-          envFrom:
-            - configMapRef:
-                name: rabbitmq-configmap
-            - secretRef:
-                name: rabbitmq-secret
+            - containerPort: 4369
+              name: discovery
+            - containerPort: 5672
+              name: amqp
+            - containerPort: 15672
+              name: management
+          env:
+            - name: RABBIT_POD_NAME
+              valueFrom:
+                fieldRef:
+                  apiVersion: v1
+                  fieldPath: metadata.name
+            - name: RABBIT_POD_NAMESPACE
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.namespace
+            - name: RABBITMQ_NODENAME
+              value: rabbit@$(RABBIT_POD_NAME).rabbitmq.$(RABBIT_POD_NAMESPACE).svc.cluster.local
+            - name: RABBITMQ_USE_LONGNAME 
+              value: "true"
+            - name: RABBITMQ_CONFIG_FILE
+              value: "/config/rabbitmq"
+            - name: RABBITMQ_ERLANG_COOKIE
+              valueFrom:
+                secretKeyRef:
+                  name: rabbitmq-secret
+                  key: RABBITMQ_ERLANG_COOKIE
+            - name: K8S_HOSTNAME_SUFFIX
+              value: .rabbitmq.$(RABBIT_POD_NAMESPACE).svc.cluster.local
           volumeMounts:
             - name: rabbitmq-volume
-              mountPath: "/var/lib/rabbitmq"  #path WITHIN container(pod) where data will stored. We need to mount an ACTUAL storage to this path.
+              mountPath: /var/lib/rabbitmq
+              readOnly: false
+            - name: config-file
+              mountPath: /config/
+            - name: plugins-file
+              mountPath: /etc/rabbitmq/
+          resources:
+            requests:
+              memory: "256Mi"
+              cpu: "250m"
+            limits:
+              memory: "512Mi"
+              cpu: "500m"
       volumes:
-        - name: rabbitmq-volume
-          persistentVolumeClaim:
-            claimName: rabbitmq-pvc
+        - name: config-file
+          emptyDir: {}
+        - name: plugins-file
+          emptyDir: {}
+        - name: config
+          configMap:
+            name: rabbitmq-config
+            defaultMode: 0755
+  volumeClaimTemplates:   #dynamic provisioning
+    - metadata:
+        name: rabbitmq-volume
+      spec:
+        accessModes: [ "ReadWriteOnce" ]
+        storageClassName: standard   #this name might change in prod env.
+        resources:
+          requests:
+            storage: 100Mi

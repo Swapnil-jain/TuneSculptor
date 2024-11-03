@@ -1,4 +1,4 @@
-import jwt, os #for auth
+import jwt, os, bcrypt #for auth
 from flask import Flask, request
 from flask_mysqldb import MySQL
 from datetime import datetime, timezone, timedelta
@@ -16,27 +16,55 @@ mysql=MySQL(server) #instance of MySQL
 
 @server.route("/login", methods=["POST"])
 def login():
-    auth=request.authorization  #auth should have authenticated header.
+    auth=request.authorization  #auth should have authorization header.
     if not auth:
         return("Missing credentials", 401) #in case doesnt have authorization header
     
     #check db for username and password
     cur = mysql.connection.cursor()
-    res = cur.execute("SELECT email, password FROM user WHERE email = %s AND password = %s", (
-        auth.username, auth.password, )
-    )
-    
-    if res > 0: #means result exists in database
-        return createJWT(auth.username, os.environ.get("JWT_SECRET"), True)
+    res = cur.execute("SELECT password FROM user WHERE email = %s", (auth.username,))
+
+    if res > 0:
+        stored_hashed_password = cur.fetchone()[0]  # Get the hashed password from the result
+        # Compare hashed password with the provided password
+        if bcrypt.checkpw(auth.password.encode('utf-8'), stored_hashed_password.encode('utf-8')):
+            return createJWT(auth.username, os.environ.get("JWT_SECRET"), True)
+        else:
+            return("Invalid credentials", 401)
     else:
         return("Invalid credentials", 401)
+    
+@server.route("/register", methods=["POST"])
+def register():
+    auth=request.authorization  #auth should have authorization header.
+    if not auth:
+        return ("Missing credentials", 401) #in case doesnt have authorization header
+    
+    #check db for existing email
+    cur = mysql.connection.cursor()
+    res = cur.execute("SELECT email FROM user WHERE email = %s", (
+        auth.username, )
+    )
+
+    if res > 0: #means result already exists in database
+        return ("User already registered", 409)
+    else:
+        # Hash the password before storing it
+        hashed_password = bcrypt.hashpw(auth.password.encode('utf-8'), bcrypt.gensalt())
+        
+        cur.execute(
+            "INSERT INTO user (email, password) VALUES (%s, %s)", 
+            (auth.username, hashed_password.decode('utf-8'))
+        )
+        mysql.connection.commit()  # Commit the transaction after inserting the data
+        return ("User registered successfully", 201)  
 
 @server.route("/validate", methods=["POST"])
 def validate():
-    encoded_jwt=request.headers["Authorization"]
+    encoded_jwt=request.cookies["jwt_token"]
     if not encoded_jwt:
         return("Missing token", 401)
-    encoded_jwt=encoded_jwt.split(" ")[1] #Remember authorization token look like "Authorization: Bearer" so, we can split it based on the space.
+    #encoded_jwt=encoded_jwt.split(" ")[1] #Remember authorization token look like "Authorization: Bearer" so, we can split it based on the space.
     try:
         decoded = jwt.decode(
             encoded_jwt, os.environ.get("JWT_SECRET"), algorithms=["HS256"]

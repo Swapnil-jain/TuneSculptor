@@ -3,10 +3,11 @@ kind: PersistentVolume
 metadata:
   name: mysql-pv
 spec:
-  storageClassName: manual
+  storageClassName: standard
   capacity:
     storage: 1Gi
   accessModes:
     - ReadWriteOnce
   hostPath:
-    path: /etc/data/mysql
+    path: /mnt/data/
+# remember persistent volumes are not bound by namespaces.

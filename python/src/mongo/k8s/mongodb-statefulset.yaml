@@ -3,7 +3,8 @@ kind: StatefulSet
 metadata:
   name: mongodb-statefulset
 spec:
-  replicas: 1
+  replicas: 2
+  serviceName: "mongodb-headless"
   selector:
     matchLabels:
       db: mongodb-pod
@@ -12,20 +13,41 @@ spec:
       labels:
         db: mongodb-pod
     spec:
+      terminationGracePeriodSeconds: 10 #wait 10 seconds before shutting down pod. This helps ensure that MongoDB can perform necessary cleanup to avoid data corruption or other issues related to abrupt termination.
       containers:
         - name: mongodb-container
-          image: mongo:latest
+          image: shourovroy/motonok-dbs:latest   #mongodb with keyfile configured for usage in authentication across replicas.
+          command:
+            - mongod
+            - "--auth"
+            - "--replSet"
+            - "res0"
+            - "--keyFile"  # path to a key file that MongoDB uses to authenticate communication between members of the replica set
+            - "/etc/mongo-keyfile"
+            - "--bind_ip_all"
           ports:
             - containerPort: 27017
-          envFrom:
-            - secretRef:
-                name: mongodb-secret
+          env:
+            - name: MONGO_INITDB_ROOT_USERNAME
+              value: "swapnil"  #This user is created when mongodb starts
+            - name: MONGO_INITDB_ROOT_PASSWORD
+              value: "password123"
           volumeMounts:
             - mountPath: /data/db #path WITHIN container where data will stored. We need to mount an ACTUAL storage to this path.
               name: mongodb-pv
-      volumes:
-        - name: mongodb-pv
-          persistentVolumeClaim:
-            claimName: mongodb-pvc
-      
-          
+          resources:
+            requests:
+              memory: "256Mi"
+              cpu: "250m"
+            limits:
+              memory: "512Mi"
+              cpu: "500m"
+  volumeClaimTemplates:  #This is called Dynamic Provisioning and doesn't need a PV to be manually created.
+    - metadata:
+        name: mongodb-pv
+      spec:
+        storageClassName: standard
+        accessModes: ["ReadWriteOnce"]
+        resources:
+          requests:
+            storage: 300Mi  #each member in replicaset gets this storage.

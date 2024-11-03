@@ -7,9 +7,10 @@ def main():
     mongo_user = os.environ.get("MONGO_INITDB_ROOT_USERNAME")
     mongo_pass = os.environ.get("MONGO_INITDB_ROOT_PASSWORD")
     mongo_host = os.environ.get("MONGO_HOST")
+    mongo_replica = os.environ.get("MONGO_REPLICA_NAME")
     
     client = MongoClient(
-        f"mongodb://{mongo_user}:{mongo_pass}@{mongo_host}:27017") #Note that flask is not involved here. So we set mongodb up like this.
+        f"mongodb://{mongo_user}:{mongo_pass}@{mongo_host}:27017/?replicaSet={mongo_replica}") #Note that flask is not involved here. So we set mongodb up like this.
     db_videos= client.videos  
     db_mp3s= client.mp3s
     
@@ -19,8 +20,8 @@ def main():
     
     #rabbitmq
     connection= pika.BlockingConnection(pika.ConnectionParameters(
-        host="rabbitmq-service",
-        port=5673,  
+        host=os.environ.get("RABBIT_HOST"),
+        port=5672,  
     ))
     channel = connection.channel()
      

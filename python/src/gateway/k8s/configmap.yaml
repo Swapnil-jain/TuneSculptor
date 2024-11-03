@@ -4,3 +4,5 @@ metadata:
   name: gateway-configmap
 data:
   AUTH_SVC_ADDRESS: "auth-service:5001"
+  MP3_QUEUE: "mp3"
+  VIDEO_QUEUE: "video"

@@ -5,13 +5,13 @@ metadata:
 spec:
   selector:
     app: rabbitmq-pod #used to select what pod-names to forward requests to.
-  type: ClusterIP
+  type: LoadBalancer 
   ports:
     - name: http
-      port: 15673 #receives here
+      port: 15672 #receives here
       targetPort: 15672 #forwards requests to this port.
       protocol: TCP
     - name: amqp
-      port: 5673 #receives here
+      port: 5672 #receives here
       targetPort: 5672 #forwards requests to this port.
       protocol: TCP

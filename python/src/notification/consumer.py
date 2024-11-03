@@ -7,8 +7,8 @@ from send import email
 def main():
     #rabbitmq
     connection= pika.BlockingConnection(pika.ConnectionParameters(
-        host="rabbitmq-service",
-        port=5673,  
+        host=os.environ.get("RABBIT_HOST"),
+        port=5672,  
     ))
     channel = connection.channel()
 
