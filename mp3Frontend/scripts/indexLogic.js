@@ -25,15 +25,20 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     //This section dynamically replaces the part of html under drop_box with the following html.
     let fileName = e.target.files[0].name;
-    let filedata = `
-    <header>
-        <h4>${fileName}</h4>
-    </header>
-    <form id="upload-form">
-      <button type="submit" class="up-btn">Upload</button>
-    </form>
-  `;
-    dropArea.innerHTML = filedata;
+    dropArea.innerHTML = '';
+    const header = document.createElement('header');
+    const h4 = document.createElement('h4');
+    h4.textContent = fileName;  // textContent is safe from XSS, unlike innerHTML
+    header.appendChild(h4);
+    const form = document.createElement('form');
+    form.id = 'upload-form';
+    const btn = document.createElement('button');
+    btn.type = 'submit';
+    btn.className = 'up-btn';
+    btn.textContent = 'Upload';
+    form.appendChild(btn);
+    dropArea.appendChild(header);
+    dropArea.appendChild(form);
 
     // Attach the event listener after the form is added to the DOM
     const uploadForm = document.getElementById("upload-form");

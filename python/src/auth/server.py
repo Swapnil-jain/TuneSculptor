@@ -61,7 +61,7 @@ def register():
 
 @server.route("/validate", methods=["POST"])
 def validate():
-    encoded_jwt=request.cookies["jwt_token"]
+    encoded_jwt=request.cookies.get("jwt_token")
     if not encoded_jwt:
         return("Missing token", 401)
     #encoded_jwt=encoded_jwt.split(" ")[1] #Remember authorization token look like "Authorization: Bearer" so, we can split it based on the space.
@@ -69,7 +69,7 @@ def validate():
         decoded = jwt.decode(
             encoded_jwt, os.environ.get("JWT_SECRET"), algorithms=["HS256"]
         )
-    except:
+    except (jwt.ExpiredSignatureError, jwt.InvalidTokenError):
         return("Not authorized", 403)
     
     return (decoded,200)

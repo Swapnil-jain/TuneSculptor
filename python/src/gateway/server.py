@@ -1,4 +1,4 @@
-import os, gridfs, pika, json
+import os, gridfs, json
 from flask import Flask, request, send_file, jsonify, make_response
 from flask_pymongo import PyMongo
 from datetime import datetime, timedelta, timezone
@@ -12,6 +12,7 @@ from storage import util
 from bson.objectid import ObjectId
 
 server= Flask(__name__)
+server.config['MAX_CONTENT_LENGTH'] = 500 * 1024 * 1024  # 500 MB upload limit
 
 #Configures the Flask server to use a MongoDB 
 mongo_user = os.environ.get("MONGO_INITDB_ROOT_USERNAME")
@@ -28,19 +29,6 @@ mongo_mp3 = PyMongo(
 
 fs_videos=gridfs.GridFS(mongo_video.db) #GridFS is used to store files greater than BSON limit of 16 MB.
 fs_mp3s = gridfs.GridFS(mongo_mp3.db) 
-
-"""
-1.Establishes a connection to a RabbitMQ message broker.
-2.Creates a channel on the RabbitMQ connection.
-"""
-connection = pika.BlockingConnection(pika.ConnectionParameters(
-    host=os.environ.get("RABBIT_HOST"),
-    port=5672,
-    heartbeat=60,
-))
-channel = connection.channel(); 
-channel.queue_declare(queue=os.environ.get("VIDEO_QUEUE"), durable=True, arguments={'x-queue-type':'quorum'})  #makes our queue if they don't already exist.
-channel.queue_declare(queue=os.environ.get("MP3_QUEUE"), durable=True, arguments={'x-queue-type':'quorum'})
 
 scheduler = BackgroundScheduler()
 
@@ -79,11 +67,11 @@ def register():
 
 @server.route("/upload", methods=["POST"])
 def upload():
-    access, err= validate.token(request)  #ensure user authentication before upload.
+    claims, err= validate.token(request)  #ensure user authentication before upload.
     if err:
         return jsonify(error=err), 401
-    access=json.loads(access) #converting JSON string to python object
-    if access["admin"] == True: #user has admin rights as only admins can upload files for now.
+    claims=json.loads(claims) #converting JSON string to python object
+    if claims["admin"] == True: #user has admin rights as only admins can upload files for now.
         if len(request.files) > 1 or len(request.files) < 1:  #ensures user has uploaded exactly one file.
             return jsonify(error="Exactly one file required"), 400
         for _,f in request.files.items():
@@ -91,13 +79,13 @@ def upload():
             mime_type, _ = mimetypes.guess_type(f.filename)
             if not mime_type or not mime_type.startswith('video'):
                 return jsonify(error="Invalid file type. Only video files are allowed."), 400
-            
+
              # Further extension check (optional but recommended)
-            allowed_extensions ={"mp4", "avi", "mov", "wmv", "flv", "mkv", "gif", "ogg", "webm"}
+            allowed_extensions ={"mp4", "avi", "mov", "wmv", "flv", "mkv", "ogg", "webm"}
             if not any(f.filename.lower().endswith(ext) for ext in allowed_extensions):
                 return jsonify(error="Invalid file extension. Allowed extensions are: mp4, avi, mov, mkv."), 400
-        
-            err=util.upload(f, fs_videos, channel, access)
+
+            err=util.upload(f, fs_videos, claims)
             if err:
                 return jsonify(error=err), 500
         return jsonify(message="Successfully uploaded file."), 200
@@ -107,28 +95,31 @@ def upload():
 
 @server.route("/download", methods=["GET"])
 def download():
-    access, err= validate.token(request)  #ensure user authentication before upload.
+    claims, err= validate.token(request)  #ensure user authentication before download.
     if err:
         return jsonify(error=err), 401
-    access=json.loads(access) #converting JSON string to python object
-    
-    if access["admin"] == True: #user has admin rights as only admins can upload files for now.
+    claims=json.loads(claims) #converting JSON string to python object
+
+    if claims["admin"] == True: #user has admin rights as only admins can download files for now.
         fid_string = request.args.get("fid")
         if not fid_string:
             return jsonify(error="file id (fid) is required"), 400
         try:
             out = fs_mp3s.get(ObjectId(fid_string)) #convert fid_string to mongo Object.
+            #verify the file belongs to the requesting user
+            if hasattr(out, 'username') and out.username != claims["username"]:
+                return jsonify(error="Not authorized to download this file"), 403
             return send_file(out, download_name=f"{fid_string}.mp3")
         except Exception as err:
             print(err)
             return jsonify(error="internal server error"), 500
-    else: 
-        return jsonify(error="Not authorized"), 401    
+    else:
+        return jsonify(error="Not authorized"), 401
 
 @server.route("/validate_token", methods=["GET"])
 def validate_token():
     #add some sort of security check here to avoid user from spamming post requests here.
-    access, err = validate.token(request)
+    claims, err = validate.token(request)
     if err:
         return jsonify(valid=False), 401
     return jsonify(valid=True), 200

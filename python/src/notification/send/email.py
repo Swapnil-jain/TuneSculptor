@@ -8,11 +8,11 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 def notify(message):
+    message = json.loads(message)  #takes a file object and returns the json object
+    mp3_fid = message.get("mp3_fid")
     max_retries = 5
     for attempt in range(max_retries):
         try:
-            message = json.loads(message)  #takes a file object and returns the json object
-            mp3_fid = message.get("mp3_fid")
             sender_address = os.environ.get("GMAIL_USER")
             sender_pass = os.environ.get("GMAIL_PASS")
             recipient_address = message.get("username")

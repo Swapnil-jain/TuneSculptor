@@ -23,7 +23,7 @@ spec:
         image: swapnilthejain/notification
         envFrom:
           - secretRef:
-              name: notication-secret
+              name: notification-secret
           - configMapRef:
               name: notification-configmap
         resources:

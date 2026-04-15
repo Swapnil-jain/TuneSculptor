@@ -11,7 +11,8 @@ def login(request):
     basicAuth= (auth.username, auth.password)
     response = requests.post(  #Will make a POST request to our auth service.
         f"http://{os.environ.get('AUTH_SVC_ADDRESS')}/login",
-        auth=basicAuth
+        auth=basicAuth,
+        timeout=5
     )
     
     if response.status_code==200:
@@ -27,6 +28,7 @@ def register(request):
     basicAuth= (auth.username, auth.password)
     response = requests.post(  #Will make a POST request to our auth service.
         f"http://{os.environ.get('AUTH_SVC_ADDRESS')}/register",
-        auth=basicAuth
+        auth=basicAuth,
+        timeout=5
     )
     return response

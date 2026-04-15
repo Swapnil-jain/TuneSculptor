@@ -12,7 +12,8 @@ def token(request):
     
     response = requests.post(  #Send a POST request to our auth_Service
         f"http://{os.environ.get('AUTH_SVC_ADDRESS')}/validate",
-        cookies={"jwt_token":token}
+        cookies={"jwt_token":token},
+        timeout=5
     )
     
     if response.status_code==200:
